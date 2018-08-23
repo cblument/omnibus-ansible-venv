@@ -28,12 +28,18 @@ case "$1" in
     exit 1
 esac
 
+DEBIAN_MAJOR="$(cat /etc/debian_version | cut -f1 -d.)"
+
 apt-get update -q
-DEBIAN_FRONTEND=noninteractive apt-get -y install ruby && rm -rf /home/vagrant/.cache
+DEBIAN_FRONTEND=noninteractive apt-get -yq install ruby && rm -rf /home/vagrant/.cache
+# Fix ssl on wheezy
+if [ $DEBIAN_MAJOR -eq 7 ]; then
+  DEBIAN_FRONTEND=noninteractive apt-get -yq install --only-upgrade libssl1.0.0
+fi
 DEBIAN_FRONTEND=noninteractive apt-get -yq install python-virtualenv
 virtualenv /opt/ansible-omnibus
 # Install the latest version of pip
-/opt/ansible-omnibus/bin/pip install -U pip
+/opt/ansible-omnibus/bin/pip install -U pip -i https://pypi.python.org/simple/
 
 if [ -z $ANSIBLE_VERSION ]; then
   /opt/ansible-omnibus/bin/pip install ansible
